@@ -504,7 +504,7 @@ def main(args):
             generated_files.update( generate(cut, output_prefix) )
 
     # convert width/height in mm to pixels
-    if args.panel_width > 0 and args.panel_height > 0:
+    if args.panel_width > 0 and args.panel_height > 0 and args.merge:
         width_px = int( (args.panel_width / 25.4) * 96)
         height_px = int( (args.panel_height / 25.4) * 96)
         margin_px = int( (args.margin / 25.4) * 96)
@@ -548,6 +548,7 @@ if __name__ == "__main__":
     parser.add_argument("--dpi", type=int, default=96, help="SVG resolution in dots-per-inch")
     parser.add_argument("--margin", type=int, default=1, help="margin around outside of element in mm")
     parser.add_argument("--output", default="merged_output.svg", help="Merged output SVG file suffix")
+    parser.add_argument("--merge", default=False, action="store_true", help="Produce merged output")
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
