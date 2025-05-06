@@ -62,7 +62,7 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
 
     generated_files = []
     defaults = config_data.get("Defaults", {})
-   
+
     for ii, box_settings in enumerate(config_data.get("Boxes", [])):
         # Allow for skipping generation
         if box_settings.get("generate") == False:
@@ -72,7 +72,7 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
         box_type = box_settings.pop("box_type", None)
         if box_type is None:
             raise ValueError("box_type must be provided for each cut")
-        
+
         # __ALL__ is a special case
         if box_type != "__ALL__":
             box_classes = ( generators_by_name.get(box_type, None), )
@@ -128,7 +128,7 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
             if format != "svg":
                 box_args.append(f"--format={format}")
 
-            # Parse the box arguments - because we allow arguments at the 
+            # Parse the box arguments - because we allow arguments at the
             # top-level defaults, we ignore unknown arguments
             try:
                 # Ignore unknown arguments by pre-parsing. This two stage
@@ -271,11 +271,11 @@ def main() -> None:
     args, extra = parser.parse_known_args()
     if args.generator and (args.examples or args.multi_generator or args.list):
         parser.error("cannot combine --generator with other commands")
-    
+
     # if debug is True set logging level
     if args.debug:
         logging.getLogger().setLevel(logging.DEBUG)
-    
+
     # Handle various actions
     if args.version:
         print_version()

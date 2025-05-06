@@ -25,7 +25,7 @@ class TestSVG:
     Just test generators which have a default output without an input requirement.
     Uses files from examples folder as reference.
     """
-    
+
     configPath = Path(__file__).parent.parent / 'examples.yml'
     with open(configPath) as ff:
         configData = yaml.safe_load(ff)
@@ -62,7 +62,7 @@ class TestSVG:
             boxArgs.append(f"--{kk}={vv}")
         argsHash = hashlib.sha1(" ".join(sorted(boxArgs)).encode("utf-8")).hexdigest()
         return boxArgs, argsHash
-    
+
     @staticmethod
     def is_valid_xml_by_lxml(xml_string: str) -> bool:
         try:
@@ -82,7 +82,7 @@ class TestSVG:
         boxArgs, argsHash = TestSVG.get_additional_test_args_hash(generator_settings)
         boxArgs = " ". join(boxArgs)
         return f"{boxName}_{generator_idx}_{argsHash}_{boxArgs}"
-    
+
     @pytest.mark.parametrize(
         "generator",
         all_generators.values(),
@@ -173,7 +173,7 @@ class TestSVG:
             generator = self.generators_by_name.get(boxType, None)
             if generator is None:
                 continue
-            
+
             boxArgs, argsHash = TestSVG.get_additional_test_args_hash(generator_settings)
             validTests.add((boxName, argsHash[0:8]))
 
@@ -184,9 +184,7 @@ class TestSVG:
             if referenceFile.endswith(".svg") and "_" in referenceFile:
                 boxName, argsHash = referenceFile[:-4].split("_")
                 exampleFiles.add((boxName, argsHash))
-        
+
         extraExamples = exampleFiles - validTests
         if extraExamples:
             pytest.fail(f"{len(extraExamples)} extra files found: {extraExamples}")
-
-
