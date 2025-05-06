@@ -108,9 +108,21 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
             box_args = []
             for kk, vv in settings.items():
                 # Handle format separately
-                if kk in ("format",):
+                if kk in ("format","layout"):
                     continue
                 box_args.append(f"--{kk}={vv}")
+
+            # Layout has three options:
+            #  - provided verbatim in the YAML file
+            #  - provided as a path to a file in the YAML file
+            #  - using the special placeholder __GENERATE__ which will invoke the default
+            if "layout" in settings:
+                if os.path.exists(settings["layout"]):
+                    with open(settings["layout"]) as ff:
+                        layout = ff.read()
+                else:
+                    layout = settings["layout"]
+                box_args.append(f"--layout={layout}")
 
             # SVG is default, only apply argument if changing default
             if format != "svg":
@@ -132,6 +144,15 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
             except ArgumentParserError:
                 print("Error parsing box args for box %s : %s", ii, box_cls_name)
                 continue
+
+            # handle __GENERATE__ which must be called after parseArgs
+            if getattr(box, "layout", None) == "__GENERATE__":
+                if hasattr(box, "generate_layout") and callable(box.generate_layout):
+                    box.layout = box.generate_layout()
+                else:
+                    print("Error box %s : %s requires manual layout", ii, box_cls_name)
+                    continue
+
             box.metadata["reproducible"] = True
 
             # Render the box SVG
