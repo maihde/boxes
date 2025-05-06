@@ -50,7 +50,7 @@ def print_grouped_generators() -> None:
             description = description.replace("\n", "").replace("\r", "").strip()
             print(f' *  {box.__name__:<15} - {ConsoleColors.ITALIC}{description}{ConsoleColors.CLEAR}')
 
-def multi_generate(config_path : Path, output_path : Path, output_name_formater=None, format="svg") -> list[str]:
+def multi_generate(config_path : Path, output_path : Path|str, output_name_formater=None, format="svg") -> list[str]:
     if isinstance(config_path, str) or isinstance(config_path, Path):
         with open(config_path) as ff:
             config_data = yaml.safe_load(ff)
@@ -74,9 +74,10 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
             raise ValueError("box_type must be provided for each cut")
 
         # __ALL__ is a special case
+        box_classes: tuple|None = None
         if box_type != "__ALL__":
             box_classes = ( generators_by_name.get(box_type, None), )
-            if box_classes is None:
+            if box_classes == (None,):
                 raise ValueError("invalid generator '%s'" % box_type)
         else:
             skipGenerators = set(box_settings.get("skipGenerators", []))
@@ -85,6 +86,9 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
             box_classes = tuple(filter(lambda x: x.__name__ not in avoidGenerators, all_generators.values()))
 
         for box_cls in box_classes:
+            # box_cls should never be None, but this check prevents mypy from complaining
+            if box_cls is None:
+                continue
             box_cls_name = box_cls.__name__
 
             # Instantitate the box object
@@ -148,7 +152,7 @@ def multi_generate(config_path : Path, output_path : Path, output_name_formater=
             # handle __GENERATE__ which must be called after parseArgs
             if getattr(box, "layout", None) == "__GENERATE__":
                 if hasattr(box, "generate_layout") and callable(box.generate_layout):
-                    box.layout = box.generate_layout()
+                    setattr(box, "layout", box.generate_layout()) # use setattr to avoid mypy warning
                 else:
                     print("Error box %s : %s requires manual layout", ii, box_cls_name)
                     continue
@@ -291,22 +295,22 @@ def main() -> None:
             if os.path.isdir(extra[0]):
                 # if the output path is a folder assume the default name format
                 # and write all files to the sub-folder
-                output_path = extra[0]
+                output_dest = extra[0]
                 output_fname_format = "{name}_{box_idx}"
             elif "{" not in extra[0] and "}" not in extra[0]:
                 # if substitution brackets aren't found, assume that isn't
                 # the desired behavior since it would cause every file to overwrite previous files
                 # so use this as a prefix with box index
-                output_path = os.path.dirname(extra[0])
+                output_dest = os.path.dirname(extra[0])
                 output_fname_format = extra[0] + "_{box_idx}"
             else:
                 # The user has provided a full path template, so use it as-is
-                output_path = os.path.dirname(extra[0])
+                output_dest = os.path.dirname(extra[0])
                 output_fname_format = os.path.basename(extra[0])
         except IndexError:
-            output_path = "."
+            output_dest = "."
             output_fname_format = "{name}_{box_idx}"
-        multi_generate(args.multi_generator, output_path, output_fname_format)
+        multi_generate(args.multi_generator, output_dest, output_fname_format)
     elif args.merge:
         merger = boxes.svgmerge.SvgMerge()
         merger.parseArgs(extra)

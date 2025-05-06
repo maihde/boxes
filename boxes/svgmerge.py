@@ -47,6 +47,7 @@ class SvgMerge:
     def __init__(self):
         self.args = None
         self.non_default_args = {}
+        self.output = None
         self.argparser = argparse.ArgumentParser()
         self.argparser.add_argument("cuts", nargs="+", help="Input cut files")
         self.argparser.add_argument("--rotation", default=False, action="store_true")
